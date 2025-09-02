@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import time
 import logging
 import os
 from urllib.parse import urljoin
@@ -64,13 +63,6 @@ QUERIES = [
     "https://www.olx.ua/uk/list/q-playstation-tv/"
 ]
 
-# Title keywords filter (case-insensitive). All must be present.
-REQUIRED_KEYWORDS = [
-    kw.strip().lower()
-    for kw in os.getenv("OLX_TITLE_KEYWORDS", "tv,playstation").split(",")
-    if kw.strip()
-]
-
 def fetch_ads(url):
     logging.info("Fetching URL: %s", url)
     try:
@@ -112,17 +104,16 @@ def fetch_ads(url):
             price_text = price_tag.get_text(strip=True) if price_tag else "N/A"
             # Filter by required keywords in title
             lowered = title_text.lower()
-            missing = [kw for kw in REQUIRED_KEYWORDS if kw not in lowered]
-            if missing:
-                logging.debug("Skipped ad missing keywords %s: %s", missing, title_text)
-                continue
-
-            ads.append({
-                "id": ad_id,
-                "title": title_text,
-                "price": price_text,
-                "url": absolute_url
-            })
+            if "tv" in lowered and "playstation" in lowered:
+                 ads.append({
+                    "id": ad_id,
+                    "title": title_text,
+                    "price": price_text,
+                    "url": absolute_url
+                })
+            else:
+                logging.debug("Skipped ad missing keywords: %s", title_text)
+           
     logging.info("Parsed %d ads from %s", len(ads), url)
     return ads
 
